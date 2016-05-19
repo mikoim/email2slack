@@ -36,7 +36,14 @@ vim /etc/postfix/aliases
 
 ...
 
-iamauser: |/usr/local/bin/email2slack.py
+# notice only, not forward
+user: |/usr/local/bin/email2slack.py
+
+# notice and forward e-mail to other user
+user: otheruser, |/usr/local/bin/email2slack.py
+
+# notice and leave e-mail on same user
+user: \user, |/usr/local/bin/email2slack.py
 
 ...
 
