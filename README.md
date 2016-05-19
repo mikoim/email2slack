@@ -1,7 +1,9 @@
 # email2slack
 
-E-mail forwarding script for Slack written in Python.
-I tested on Python 3.x and Postfix.
+MIME E-mail forwarding script for Slack written in Python.
+
+I tested on Python 3.x and Postfix only.
+Please report test result and sample configuration on other MTAs.
 
 ## Demo
 
@@ -39,8 +41,8 @@ vim /etc/postfix/aliases
 # notice only, not forward
 user: |/usr/local/bin/email2slack.py
 
-# notice and forward e-mail to other user
-user: otheruser, |/usr/local/bin/email2slack.py
+# notice and forward e-mail to another user
+user: anotheruser, |/usr/local/bin/email2slack.py
 
 # notice and leave e-mail on same user
 user: \user, |/usr/local/bin/email2slack.py
