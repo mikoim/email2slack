@@ -1,0 +1,32 @@
+[Slack]
+# Enumerate slack endpoints.
+#
+# Format:
+# TEAM_ALIAS = URL
+#
+# Example:
+# myteam = https://hooks.slack.com/services/FOO/BAR/FOOBAR
+#
+
+
+[Team]
+# Team convert table.
+#
+# Format:
+# TO_ADDRESS_REGEX = TEAM_ALIAS
+#
+# Example:
+# .* = myteam
+# .*@gmail.com = home
+
+
+[Channel]
+# Channel convert table.
+#
+# Format:
+# TO_ADDRESS_REGEX = CHANNEL
+#
+# Example:
+# .* = random
+# .*@gmail.com = general
+
