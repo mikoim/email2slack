@@ -17,6 +17,25 @@ Please report test result and sample configuration on other MTAs.
 
 ## Getting Started
 
+### Install from PyPI
+
+```bash
+# Install email2slack
+pip3 install email2slack
+
+# Fetch configuration file from GitHub
+cd /usr/local/etc/
+curl -O https://raw.githubusercontent.com/mikoim/email2slack/master/email2slack
+
+# Before using, You must edit config file
+vim /usr/local/etc/email2slack
+```
+
+In this case, setuptools create script to call email2slack and place it in ```bin``` directory automatically.
+So you should use the script in Setup MTA section.
+
+### Install from GitHub repository
+
 ```bash
 git clone https://github.com/mikoim/email2slack.git
 cd email2slack
@@ -32,7 +51,9 @@ cp email2slack /usr/local/etc/
 vim /usr/local/etc/email2slack
 ```
 
-### Postfix
+### Setup MTA
+
+#### Postfix
 ```bash
 vim /etc/postfix/aliases
 

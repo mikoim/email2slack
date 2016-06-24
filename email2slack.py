@@ -98,7 +98,11 @@ class Slack:
         requests.post(url, json=body)
 
 
-if __name__ == '__main__':
+def main():
     raw_mail = ''.join([x for x in sys.stdin.read() if x is not None])
     mail = EmailParser.parse(raw_mail)
     Slack().notice(mail)
+
+
+if __name__ == '__main__':
+    main()
