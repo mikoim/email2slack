@@ -3,6 +3,7 @@
 import sys
 from configparser import ConfigParser
 from email.parser import Parser
+from email.header import decode_header
 
 import chardet
 import re
@@ -14,9 +15,9 @@ class EmailParser:
     def parse(mime_mail):
         parsed_mail = Parser().parsestr(mime_mail)
         result = {
-            'From': parsed_mail['From'],
-            'To': parsed_mail['To'],
-            'Subject': parsed_mail['Subject'],
+            'From': EmailParser.parse_header(parsed_mail['From']),
+            'To': EmailParser.parse_header(parsed_mail['To']),
+            'Subject': EmailParser.parse_header(parsed_mail['Subject']),
             'body-plain': None,
             'body-html': None
         }
@@ -43,6 +44,15 @@ class EmailParser:
     def extract_message(message):
         body = message.get_payload(decode=True)
         return message['Content-Type'], body.decode(encoding=chardet.detect(body)['encoding'])
+
+    @staticmethod
+    def parse_header(raw_header):
+        decoded_string, charset = decode_header(raw_header)[0]
+
+        if charset:
+            decoded_string = decoded_string.decode(charset)
+
+        return decoded_string
 
 
 class Slack:
