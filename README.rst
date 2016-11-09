@@ -17,7 +17,7 @@ Demo
 Requirements
 ------------
 
--  Python 3.x (Not tested in Python 2.x)
+-  Python 3.x (Not tested on Python 2.x)
 -  chardet : https://github.com/chardet/chardet
 -  requests : https://github.com/kennethreitz/requests
 
