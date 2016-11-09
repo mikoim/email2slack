@@ -10,7 +10,7 @@ except:
 setup(
     name='email2slack',
 
-    version='1.0.0a1',
+    version='1.0.0a2',
 
     description='MIME E-mail forwarding script for Slack written in Python',
     long_description=long_description,

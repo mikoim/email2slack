@@ -15,9 +15,9 @@ class EmailParser:
     def parse(mime_mail):
         parsed_mail = Parser().parsestr(mime_mail)
         result = {
-            'From': EmailParser.parse_header(parsed_mail['From']),
-            'To': EmailParser.parse_header(parsed_mail['To']),
-            'Subject': EmailParser.parse_header(parsed_mail['Subject']),
+            'From': EmailParser.parse_header(parsed_mail, 'From'),
+            'To': EmailParser.parse_header(parsed_mail, 'To'),
+            'Subject': EmailParser.parse_header(parsed_mail, 'Subject'),
             'body-plain': None,
             'body-html': None
         }
@@ -33,7 +33,7 @@ class EmailParser:
             content_type = m[0]
             body = m[1]
 
-            if content_type.startswith('text/plain'):
+            if content_type is None or content_type.startswith('text/plain'):
                 result['body-plain'] = body
             elif content_type.startswith('text/html'):
                 result['body-html'] = body
@@ -46,13 +46,16 @@ class EmailParser:
         return message['Content-Type'], body.decode(encoding=chardet.detect(body)['encoding'])
 
     @staticmethod
-    def parse_header(raw_header):
-        decoded_string, charset = decode_header(raw_header)[0]
+    def parse_header(parsed_mail, field: str) -> str:
+        try:
+            raw_header = parsed_mail[field]
+            decoded_string, charset = decode_header(raw_header)[0]
+            if charset:
+                decoded_string = decoded_string.decode(charset)
+            return decoded_string
 
-        if charset:
-            decoded_string = decoded_string.decode(charset)
-
-        return decoded_string
+        except TypeError:
+            return ''
 
 
 class Slack:
