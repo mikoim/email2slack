@@ -46,7 +46,11 @@ class EmailParser:
     @staticmethod
     def extract_message(message):
         body = message.get_payload(decode=True)
-        return message['Content-Type'], body.decode(encoding=chardet.detect(body)['encoding'])
+        charset = chardet.detect(body)['encoding']
+        if charset is None:
+            charset = 'utf-8'
+
+        return message['Content-Type'], body.decode(encoding=charset)
 
     @staticmethod
     def parse_header(parsed_mail, field: str) -> str:
