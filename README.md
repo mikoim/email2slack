@@ -1,6 +1,8 @@
 # email2slack
 
 [![PyPI version](https://badge.fury.io/py/email2slack.svg)](https://badge.fury.io/py/email2slack)
+[![Build Status](https://travis-ci.org/mikoim/email2slack.svg?branch=master)](https://travis-ci.org/mikoim/email2slack)
+[![Coverage Status](https://coveralls.io/repos/github/mikoim/email2slack/badge.svg?branch=master)](https://coveralls.io/github/mikoim/email2slack?branch=master)
 
 MIME E-mail forwarding script for Slack written in Python.
 
