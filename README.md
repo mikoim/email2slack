@@ -1,5 +1,7 @@
 # email2slack
 
+[![PyPI version](https://badge.fury.io/py/email2slack.svg)](https://badge.fury.io/py/email2slack)
+
 MIME E-mail forwarding script for Slack written in Python.
 
 I tested on Python 3.x and Postfix only.
