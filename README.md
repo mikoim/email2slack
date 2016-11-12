@@ -6,8 +6,8 @@
 
 MIME E-mail forwarding script for Slack written in Python.
 
-I tested on Python 3.x and Postfix only.
-Please report test result and sample configuration on other MTAs.
+I tested on Python 3.5 and Postfix only.
+Please report test report and sample configuration on other MTAs.
 
 ## Demo
 
@@ -15,13 +15,15 @@ Please report test result and sample configuration on other MTAs.
 
 ## Requirements
 
- - Python 3.x (Not tested on Python 2.x)
- - chardet : https://github.com/chardet/chardet
+ - Python >= 3.3
+ - chardet  : https://github.com/chardet/chardet
  - requests : https://github.com/kennethreitz/requests
 
 ## Getting Started
 
-### Install from PyPI
+### Install email2slack
+
+#### From PyPI
 
 ```bash
 # Install email2slack
@@ -38,7 +40,7 @@ vim /usr/local/etc/email2slack
 In this case, setuptools create script to call email2slack and place it in ```bin``` directory automatically.
 So you should use the script in Setup MTA section.
 
-### Install from GitHub repository
+#### From GitHub repository
 
 ```bash
 git clone https://github.com/mikoim/email2slack.git

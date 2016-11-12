@@ -1,0 +1,2 @@
+[run]
+include = email2slack.py
