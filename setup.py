@@ -1,9 +1,9 @@
-from codecs import open
-
 from setuptools import setup
 
 try:
-    long_description = open('README.rst').read()
+    import pypandoc
+
+    long_description = pypandoc.convert('README.md', 'rst')
 except:
     long_description = 'MIME E-mail forwarding script for Slack written in Python'
 
