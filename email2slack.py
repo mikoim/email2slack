@@ -10,6 +10,9 @@ import re
 import requests
 
 
+# ToDo: add doc strings
+
+
 class EmailParser:
     @staticmethod
     def parse(mime_mail):
@@ -48,7 +51,7 @@ class EmailParser:
     @staticmethod
     def parse_header(parsed_mail, field: str) -> str:
         try:
-            raw_header = parsed_mail[field]
+            raw_header = parsed_mail[field]  # ToDo: Try to read value from multiple fields
             decoded_string, charset = decode_header(raw_header)[0]
             if charset:
                 decoded_string = decoded_string.decode(charset)
@@ -71,7 +74,7 @@ class Slack:
         address_to = mail['To']
         address_from = mail['From']
         subject = mail['Subject']
-        body = mail['body-plain']
+        body = mail['body-plain']  # ToDo: HTML email support
 
         text = 'From: {:s}\nTo: {:s}\nSubject: {:s}\n\n{:s}'.format(address_from, address_to, subject, body)
 
