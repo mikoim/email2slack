@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 
+import re
 import sys
 from configparser import ConfigParser
-from email.parser import Parser
 from email.header import decode_header
+from email.parser import Parser
 
 import chardet
-import re
 import requests
 
 
 # ToDo: add doc strings
 
 
-class EmailParser:
+class EmailParser(object):
     @staticmethod
     def parse(mime_mail):
         parsed_mail = Parser().parsestr(mime_mail)
@@ -53,9 +53,10 @@ class EmailParser:
         return message['Content-Type'], body.decode(encoding=charset)
 
     @staticmethod
+    # ToDo: Try to read value from multiple fields
     def parse_header(parsed_mail, field: str) -> str:
         try:
-            raw_header = parsed_mail[field]  # ToDo: Try to read value from multiple fields
+            raw_header = parsed_mail[field]
             decoded_string, charset = decode_header(raw_header)[0]
             if charset:
                 decoded_string = decoded_string.decode(charset)
@@ -65,10 +66,15 @@ class EmailParser:
             return ''
 
 
-class Slack:
+class Slack(object):
     def __init__(self):
         cfg = ConfigParser()
-        cfg.read(['email2slack', '~/.email2slack', '/etc/email2slack', '/usr/local/etc/email2slack'])
+        cfg.read([
+            'email2slack',
+            '~/.email2slack',
+            '/etc/email2slack',
+            '/usr/local/etc/email2slack'
+        ])
 
         slack = {s[0]: s[1] for s in cfg.items('Slack')}
         self.__team = [(re.compile(t[0]), slack[t[1]]) for t in cfg.items('Team')]
