@@ -2,6 +2,7 @@
 
 import re
 import sys
+import os
 from configparser import ConfigParser
 from email.header import decode_header
 from email.parser import Parser
@@ -9,6 +10,8 @@ from email.parser import Parser
 import chardet
 import requests
 
+from bs4 import BeautifulSoup
+import json
 
 # ToDo: add doc strings
 
@@ -28,13 +31,17 @@ class EmailParser(object):
         messages = []
         if parsed_mail.is_multipart():
             for m in parsed_mail.get_payload():
-                messages.append(EmailParser.extract_message(m))
+                extracted = EmailParser.extract_message(m)
+                if extracted:
+                    messages.append(extracted)
         else:
-            messages.append(EmailParser.extract_message(parsed_mail))
+            extracted = EmailParser.extract_message(parsed_mail)
+            if extracted:
+                messages.append(extracted)
 
         for m in messages:
             content_type = m[0]
-            body = m[1]
+            body = m[1].replace('\r\n', '\n')
 
             if content_type is None or content_type.startswith('text/plain'):
                 result['body-plain'] = body
@@ -46,6 +53,8 @@ class EmailParser(object):
     @staticmethod
     def extract_message(message):
         body = message.get_payload(decode=True)
+        if not body:
+            return None
         charset = chardet.detect(body)['encoding']
         if charset is None:
             charset = 'utf-8'
@@ -53,18 +62,23 @@ class EmailParser(object):
         return message['Content-Type'], body.decode(encoding=charset)
 
     @staticmethod
-    # ToDo: Try to read value from multiple fields
     def parse_header(parsed_mail, field: str) -> str:
-        try:
-            raw_header = parsed_mail[field]
-            decoded_string, charset = decode_header(raw_header)[0]
-            if charset:
-                decoded_string = decoded_string.decode(charset)
-            return decoded_string
-
-        except TypeError:
-            return ''
-
+        decoded = []
+        raw_header = parsed_mail[field]
+        # decode_header does not work well in some case,
+        # eg. FW: =?ISO-2022-JP?B?GyRCR1s/LklURz0bKEI=?=: 
+        for chunk in re.split(r'(=\?[^?]+\?[BQ]\?[^?]+\?=)', raw_header):
+            if chunk.find('=?') >= 0:
+                for decoded_chunk, charset in decode_header(chunk):
+                    if charset:
+                        try:
+                            decoded_chunk = decoded_chunk.decode(charset)
+                        except TypeError:
+                            pass
+                    decoded.append(decoded_chunk)
+            elif chunk:
+                decoded.append(chunk)
+        return re.sub(r'\r\n\s+', ' ', ''.join(decoded))
 
 class Slack(object):
     def __init__(self):
@@ -84,7 +98,10 @@ class Slack(object):
         address_to = mail['To']
         address_from = mail['From']
         subject = mail['Subject']
-        body = mail['body-plain']  # ToDo: HTML email support
+        if mail['body-plain']:
+            body = mail['body-plain']
+        elif mail['body-html']:
+            body = re.sub('\n+', '\n', BeautifulSoup(mail['body-html'], "lxml").get_text()).lstrip('\n')
 
         text = 'From: {:s}\nTo: {:s}\nSubject: {:s}\n\n{:s}'.format(address_from, address_to, subject, body)
 
@@ -112,11 +129,27 @@ class Slack(object):
     @staticmethod
     def __post(url, body):
         requests.post(url, json=body)
+        #print(json.dumps(body, ensure_ascii=False, indent=2))
 
 
 def main():
-    raw_mail = ''.join([x for x in sys.stdin.read() if x is not None])
-    mail = EmailParser.parse(raw_mail)
+    raw_mail = bytearray()
+    # each mail part may have a different charset from others.
+    while True:
+        chunk = os.read(sys.stdin.fileno(), 32768)
+        if chunk:
+            raw_mail.extend(chunk)
+        else:
+            break
+    
+    lines = []
+    for x in raw_mail.split(b"\n"):
+        charset = chardet.detect(x)['encoding']
+        if x:
+            lines.append(x.decode(charset))
+        else:
+            lines.append('')
+    mail = EmailParser.parse('\n'.join(lines))
     Slack().notice(mail)
 
 
