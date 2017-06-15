@@ -11,7 +11,6 @@ import chardet
 import requests
 
 from bs4 import BeautifulSoup
-import json
 
 # ToDo: add doc strings
 
@@ -129,7 +128,6 @@ class Slack(object):
     @staticmethod
     def __post(url, body):
         requests.post(url, json=body)
-        #print(json.dumps(body, ensure_ascii=False, indent=2))
 
 
 def main():
