@@ -134,7 +134,7 @@ def main():
     raw_mail = bytearray()
     # each mail part may have a different charset from others.
     while True:
-        chunk = os.read(sys.stdin.fileno(), 32768)
+        chunk = sys.stdin.buffer.read()
         if chunk:
             raw_mail.extend(chunk)
         else:
