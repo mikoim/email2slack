@@ -1,10 +1,16 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+
+from __future__ import print_function
 
 import re
 import sys
 import os
 from configparser import ConfigParser
 from email.header import decode_header
+try:
+    from email.parser import BytesParser
+except:
+    BytesParser = None
 from email.parser import Parser
 
 import chardet
@@ -17,8 +23,11 @@ from bs4 import BeautifulSoup
 
 class EmailParser(object):
     @staticmethod
-    def parse(mime_mail):
-        parsed_mail = Parser().parsestr(mime_mail)
+    def parse(mime_mail_fp):
+        if callable(BytesParser):
+            parsed_mail = BytesParser().parse(mime_mail_fp)
+        else:
+            parsed_mail = Parser().parse(mime_mail_fp)
         result = {
             'From': EmailParser.parse_header(parsed_mail, 'From'),
             'To': EmailParser.parse_header(parsed_mail, 'To'),
@@ -40,7 +49,7 @@ class EmailParser(object):
 
         for m in messages:
             content_type = m[0]
-            body = m[1].replace('\r\n', '\n')
+            body = m[1].replace('\r\n', '\n').rstrip()
 
             if content_type is None or content_type.startswith('text/plain'):
                 result['body-plain'] = body
@@ -61,7 +70,8 @@ class EmailParser(object):
         return message['Content-Type'], body.decode(encoding=charset)
 
     @staticmethod
-    def parse_header(parsed_mail, field: str) -> str:
+    def parse_header(parsed_mail, field):
+        # type: (List[str], str) -> str
         decoded = []
         raw_header = parsed_mail[field]
         # decode_header does not work well in some case,
@@ -77,17 +87,21 @@ class EmailParser(object):
                     decoded.append(decoded_chunk)
             elif chunk:
                 decoded.append(chunk)
-        return re.sub(r'\r\n\s+', ' ', ''.join(decoded))
+        return re.sub(r'\r?\n\s+', ' ', ''.join(decoded))
 
 class Slack(object):
-    def __init__(self):
+    def __init__(self, argv = []):
         cfg = ConfigParser()
-        cfg.read([
+        candidate = [
             'email2slack',
-            '~/.email2slack',
+             os.path.expanduser('~/.email2slack'),
             '/etc/email2slack',
             '/usr/local/etc/email2slack'
-        ])
+        ]
+        if len(argv) == 3 and argv[1] == '-f':
+            cfg.read([argv[2]])
+        else:
+            cfg.read(candidate)
 
         slack = {s[0]: s[1] for s in cfg.items('Slack')}
         self.__team = [(re.compile(t[0]), slack[t[1]]) for t in cfg.items('Team')]
@@ -131,24 +145,12 @@ class Slack(object):
 
 
 def main():
-    raw_mail = bytearray()
-    # each mail part may have a different charset from others.
-    while True:
-        chunk = sys.stdin.buffer.read()
-        if chunk:
-            raw_mail.extend(chunk)
-        else:
-            break
-    
-    lines = []
-    for x in raw_mail.split(b"\n"):
-        charset = chardet.detect(x)['encoding']
-        if x:
-            lines.append(x.decode(charset))
-        else:
-            lines.append('')
-    mail = EmailParser.parse('\n'.join(lines))
-    Slack().notice(mail)
+    try:
+        fp = sys.stdin.buffer
+    except AttributeError:
+        fp = sys.stdin
+    mail = EmailParser.parse(fp)
+    Slack(sys.argv).notice(mail)
 
 
 if __name__ == '__main__':
