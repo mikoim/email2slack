@@ -29,12 +29,24 @@ class EmailParser(object):
         else:
             parsed_mail = Parser().parse(mime_mail_fp)
         result = {
-            'From': EmailParser.parse_header(parsed_mail, 'From'),
-            'To': EmailParser.parse_header(parsed_mail, 'To'),
-            'Subject': EmailParser.parse_header(parsed_mail, 'Subject'),
+            'From': None,
+            'To': None,
+            'Subject': None,
             'body-plain': None,
             'body-html': None
         }
+	try:
+            result['From'] = EmailParser.parse_header(parsed_mail, 'From')
+	except TypeError:
+	    result['From'] = ''
+	try:
+            result['To'] = EmailParser.parse_header(parsed_mail, 'To')
+	except TypeError:
+            result['To'] = ''
+	try:
+            result['Subject'] = EmailParser.parse_header(parsed_mail, 'Subject')
+	except TypeError:
+            result['Subject'] = ''
 
         messages = []
         if parsed_mail.is_multipart():
@@ -66,12 +78,21 @@ class EmailParser(object):
         charset = chardet.detect(body)['encoding']
         if charset is None:
             charset = 'utf-8'
+	elif charset == 'ISO-2022-JP':
+	    charset = 'ISO-2022-JP-2004'
+            return message['Content-Type'], body.replace(b'\033$B', b'\033$(Q').decode(encoding=charset, errors='replace')
+	elif charset == 'SJIS':
+	    charset = 'CP932'
+	elif charset == 'EUC-JP':
+	    charset = 'EUCJIS2004'
 
-        return message['Content-Type'], body.decode(encoding=charset)
+        return message['Content-Type'], body.decode(encoding=charset, errors='replace')
 
     @staticmethod
     def parse_header(parsed_mail, field):
         # type: (List[str], str) -> str
+	if not parsed_mail.has_key(field):
+	    return ''
         decoded = []
         raw_header = parsed_mail[field]
         # decode_header does not work well in some case,
