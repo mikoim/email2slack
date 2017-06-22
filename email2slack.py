@@ -5,6 +5,7 @@ from __future__ import print_function
 import re
 import sys
 import os
+import argparse
 from configparser import ConfigParser
 from email.header import decode_header
 try:
@@ -45,10 +46,10 @@ class EmailParser(object):
         messages = []
         extracted = EmailParser.extract_message(parsed_mail)
         if extracted:
-             if isinstance(extracted, list):
-                 messages.extend(extracted)
-             else:
-                 messages.append(extracted)
+            if isinstance(extracted, list):
+                messages.extend(extracted)
+            else:
+                messages.append(extracted)
 
         for m in messages:
             content_type = m[0]
@@ -103,7 +104,17 @@ class EmailParser(object):
         raw_header = parsed_mail.get(field, '')
         # decode_header does not work well in some case,
         # eg. FW: =?ISO-2022-JP?B?GyRCR1s/LklURz0bKEI=?=: 
-        for chunk in re.split(r'(=\?[^?]+\?[BQ]\?[^?]+\?=)', raw_header):
+        chunks = re.split(r'(=\?[^?]+\?[BQ]\?[^?]+\?=)', re.sub(r'\r?\n\s+', ' ', raw_header))
+        i = 0
+        while i < len(chunks):
+            if chunks[i].startswith('=?') and chunks[i].endswith('?=') and \
+               i < len(chunks) - 2 and \
+               chunks[i + 1] == ' ' and \
+               chunks[i + 2].startswith('=?') and chunks[i + 2].endswith('?='):
+                del(chunks[i + 1])
+            i += 1
+
+        for chunk in chunks:
             if chunk.find('=?') >= 0:
                 for decoded_chunk, charset in decode_header(chunk):
                     if charset:
@@ -123,10 +134,12 @@ class EmailParser(object):
                     decoded.append(decoded_chunk)
             elif chunk:
                 decoded.append(chunk)
-        return re.sub(r'\r?\n\s+', ' ', ''.join(decoded))
+        return ''.join(decoded)
 
 class Slack(object):
-    def __init__(self, argv = []):
+    __debug = False
+
+    def __init__(self, args):
         cfg = ConfigParser()
         candidate = [
             'email2slack',
@@ -134,14 +147,47 @@ class Slack(object):
             '/etc/email2slack',
             '/usr/local/etc/email2slack'
         ]
-        if len(argv) == 3 and argv[1] == '-f':
-            cfg.read([argv[2]])
-        else:
-            cfg.read(candidate)
+        if args.config:
+            candidate.insert(0, args.config)
+        cfg.read(candidate)
 
-        slack = {s[0]: s[1] for s in cfg.items('Slack')}
-        self.__team = [(re.compile(t[0]), slack[t[1]]) for t in cfg.items('Team')]
-        self.__channel = [(re.compile(c[0]), c[1]) for c in cfg.items('Channel')]
+        Slack.__debug = args.debug
+        default_slack = args.slack
+        default_team = args.team
+        default_channel = args.channel
+
+        slack = {}
+        if cfg.has_section('Team'):
+            for name, url in cfg.items('Slack'):
+                if name == 'default' and default_slack:
+                    url = default_slack
+                    default_slack = None
+                slack[name] = url
+        if default_slack:
+            slack['default'] = default_slack
+
+        self.__team = []
+        if cfg.has_section('Team'):
+            for pattern, team in cfg.items('Team'):
+                if pattern == 'default' and default_team:
+                    pattern, team = r'.*', default_team
+                    default_team = None
+                self.__team.append((re.compile(pattern), slack[team]))
+        if default_team and slack.has_key(default_team):
+            self.__team.append((re.compile(r'.*'), slack[default_team]))
+        if len(self.__team) == 0 and slack.has_key('default'):
+            self.__team.append((re.compile(r'.*'), slack['default']))
+
+        self.__channel = []
+        if cfg.has_section('Channel'):
+            for pattern, channel in cfg.items('Channel'):
+                if pattern == 'default' and default_channel:
+                    pattern,  channe = r'.*', default_channel
+                    default_channel = None
+                self.__channel.append((re.compile(pattern), channel))
+        if default_channel:
+            self.__channel.append((re.compile(r'.*'), default_channel))
+
         self.flags = {}
         if cfg.has_section('Flags'):
             self.flags['pretext'] = cfg.getboolean('Flags', 'pretext')
@@ -171,7 +217,7 @@ class Slack(object):
             for tr in soup.find_all("tr"):
                 tr.replace_with(tr.get_text() + "\n")
             for p in soup.find_all("p"):
-                p.replace_with(tr.get_text() + "\n")
+                p.replace_with(p.get_text() + "\n")
             return re.sub('\n{2,}', '\n\n', soup.get_text()).lstrip('\n')
 
         header_to = mail['To']
@@ -199,7 +245,7 @@ class Slack(object):
 
         body = html_escape(body)
         text = html_escape('*Date*: {:s}\n*From*: {:s}\n*To*: {:s}\n*Subject*: {:s}\n'.format(date, header_from, header_to, subject))
-        msg_limit = 4000 - len(text) - 7 - 88
+        msg_limit = 4000 - len(text) - 200
         pretext = self.flags.get('pretext', False)
         if len(body) <= msg_limit or not pretext:
             if pretext:
@@ -246,16 +292,35 @@ class Slack(object):
 
     @staticmethod
     def __post(url, body):
-        requests.post(url, json=body)
+        if Slack.__debug:
+            print(body['channel'])
+            print(body['text'])
+        else:
+            requests.post(url, json=body)
 
+
+def get_arg_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--channel",
+                    help=("default slack channel."))
+    parser.add_argument("-d", "--debug", action='store_true',
+                    help=("dry run, does not post to slack."))
+    parser.add_argument("-f", "--config",
+                    help=("email2slack config file."))
+    parser.add_argument("-s", "--slack",
+                    help=("default slack incoming hook."))
+    parser.add_argument("-t", "--team",
+                    help=("default slack team."))
+    return parser
 
 def main():
+    args = get_arg_parser().parse_args()
     try:
         fp = sys.stdin.buffer
     except AttributeError:
         fp = sys.stdin
     mail = EmailParser.parse(fp)
-    Slack(sys.argv).notice(mail)
+    Slack(args).notice(mail)
 
 
 if __name__ == '__main__':
