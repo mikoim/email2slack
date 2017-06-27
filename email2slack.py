@@ -13,7 +13,7 @@ try:
 except:
     BytesParser = None
 from email.parser import Parser
-from email.utils import parseaddr
+from email.utils import parseaddr, getaddresses
 
 import chardet
 import requests
@@ -53,7 +53,14 @@ class EmailParser(object):
 
         for m in messages:
             content_type = m[0]
-            body = m[1].replace('\r\n', '\n').rstrip()
+            body = m[1].replace('\r\n', '\n')
+            try:
+                parameter = dict([x.split('=', 1) for x in content_type.split('; ')[1:]])
+            except:
+                parameter = {}
+            if  parameter.get('format') == 'flowed' and parameter.get('delsp') == 'yes':
+                body = body.replace(b' \n', '')
+            body = body.rstrip() + '\n'
 
             if content_type is None or content_type.startswith('text/plain'):
                 if result['body-plain']:
@@ -89,7 +96,7 @@ class EmailParser(object):
             charset = 'utf-8'
         elif charset == 'ISO-2022-JP':
             charset = 'ISO-2022-JP-2004'
-            return message['Content-Type'], body.replace(b'\033$B', b'\033$(Q').decode(encoding=charset, errors='replace')
+            return message['Content-Type'], body.replace(b'\033$B', b'\033$(Q').replace(b'\033(J', b'\033(B').decode(encoding=charset, errors='replace')
         elif charset == 'SJIS':
             charset = 'CP932'
         elif charset == 'EUC-JP':
@@ -120,7 +127,7 @@ class EmailParser(object):
                     if charset:
                         if charset == 'ISO-2022-JP':
                             charset = 'ISO-2022-JP-2004'
-                            decoded_chunk = decoded_chunk.replace(b'\033$B', b'\033$(Q')
+                            decoded_chunk = decoded_chunk.replace(b'\033$B', b'\033$(Q').replace(b'\033(J', b'\033(B')
                         elif charset == 'SJIS':
                             charset = 'CP932'
                         elif charset == 'EUC-JP':
@@ -169,9 +176,11 @@ class Slack(object):
         self.__team = []
         if cfg.has_section('Team'):
             for pattern, team in cfg.items('Team'):
-                if pattern == 'default' and default_team:
-                    pattern, team = r'.*', default_team
-                    default_team = None
+                if pattern == 'default':
+                    pattern = r'.*'
+                    if default_team:
+                        team = default_team
+                        default_team = None
                 self.__team.append((re.compile(pattern), slack[team]))
         if default_team and slack.has_key(default_team):
             self.__team.append((re.compile(r'.*'), slack[default_team]))
@@ -181,9 +190,11 @@ class Slack(object):
         self.__channel = []
         if cfg.has_section('Channel'):
             for pattern, channel in cfg.items('Channel'):
-                if pattern == 'default' and default_channel:
-                    pattern,  channe = r'.*', default_channel
-                    default_channel = None
+                if pattern == 'default':
+                    pattern = r'.*'
+                    if default_channel:
+                        channel = default_channel
+                        default_channel = None
                 self.__channel.append((re.compile(pattern), channel))
         if default_channel:
             self.__channel.append((re.compile(r'.*'), default_channel))
@@ -220,6 +231,20 @@ class Slack(object):
                 p.replace_with(p.get_text() + "\n")
             return re.sub('\n{2,}', '\n\n', soup.get_text()).lstrip('\n')
 
+        def increment_of_url(text):
+            URL_PATTERN = r'(https?://[-\w\d:#@%/;$()~_?+=.&]*)'
+            DOMAINURL_PATTERN = r'(\b(?:[\w\d][-\w\d]+?\.)+\w{2,4}\b)'
+            urls = re.findall(URL_PATTERN, text)
+            domains = re.findall(DOMAINURL_PATTERN, text)
+            return len(urls)*len('<>') + len(''.join(domains)) + len(urls)*len('<http://|>')
+
+        def increment_of_callto(text):
+            return len(re.findall(r'\b(\d{3}-\d{3}-\d{4}|\d{4}-\d{3}-\d{4})\b', text))*len('<callto:>')
+
+        def increment_of_mailaddr(text):
+            addrs = [a for n, a in getaddresses(re.sub(r'<mailto:[^>]+>', '', text).splitlines()) if a.find('@') >1]
+            return len(''.join(addrs)) + len(addrs)*len('<mailto:|>')
+
         header_to = mail['To']
         address_to = parseaddr(header_to)[1]
         header_from = mail['From']
@@ -243,32 +268,50 @@ class Slack(object):
         if channel is None:
             raise Exception('channel not found: {:s}'.format(header_to))
 
-        body = html_escape(body)
-        text = html_escape('*Date*: {:s}\n*From*: {:s}\n*To*: {:s}\n*Subject*: {:s}\n'.format(date, header_from, header_to, subject))
-        msg_limit = 4000 - len(text) - 200
+        text = '*Date*: {:s}\n*From*: {:s}\n*To*: {:s}\n*Subject*: {:s}\n'.format(date, header_from, header_to, subject)
+        msg_limit = 4000 \
+                    - len(text) \
+                    - increment_of_mailaddr(text) \
+                    - len('``````\n')
         pretext = self.flags.get('pretext', False)
-        if len(body) <= msg_limit or not pretext:
+        escaped = html_escape(body)
+        increment = increment_of_url(body) + increment_of_mailaddr(body) + increment_of_callto(body)
+        if not pretext or len(escaped) + increment <= msg_limit:
+            text = html_escape(text)
             if pretext:
-                text += '```{:s}```\n'.format(body)
+                text += '```{:s}```\n'.format(escaped)
             else:
-                text += '{:s}'.format(body)
+                text += '{:s}'.format(escaped)
             self.__post(url[0], self.__payload(text, channel=channel[0], footer='Posted by email2slack'))
             return
 
         heading = text
         continued = 'continued: {:s}\n'.format(subject)
         while len(body):
-            i = -1
-            if len(body) >= msg_limit:
-                i = body.rfind('\n', 0, msg_limit)
-            if i >= 0:
-                i = i + 1
-                text = '{:s}```{:s}```'.format(heading, body[0:i])
+            msg_limit = 4000 \
+                    - len(heading) \
+                    - increment_of_mailaddr(heading) \
+                    - len('``````\n')
+            i = body.rfind('\n', 0, msg_limit) + 1
+            chunk = body[0:i]
+            increment = increment_of_url(chunk) + increment_of_mailaddr(chunk) + increment_of_callto(chunk)
+            escaped = html_escape(chunk)
+            increment += len(escaped) - len(chunk)
+            while len(chunk) + increment >= msg_limit:
+                chunk = chunk[:(msg_limit - increment)]
+                i = chunk.rfind('\n', 0, len(chunk) - 1) + 1
+                chunk = chunk[0:i]
+                escaped = html_escape(chunk)
+                increment = len(escaped) - len(chunk) + increment_of_url(chunk) + increment_of_mailaddr(chunk) + increment_of_callto(chunk)
+            heading = html_escape(heading)
+            if chunk:
+                text = '{:s}```{:s}```'.format(heading, escaped)
                 self.__post(url[0], self.__payload(text, channel=channel[0]))
-                body = body[i:]
+                body = body[len(chunk):]
                 heading = continued
             else:
-                text = '{:s}```{:s}```'.format(heading, body)
+                escaped = html_escape(body)
+                text = '{:s}```{:s}```'.format(heading, escaped)
                 self.__post(url[0], self.__payload(text, channel=channel[0]))
                 break
         self.__post(url[0], self.__payload('', channel=channel[0], footer='Posted by email2slack'))
