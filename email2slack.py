@@ -23,6 +23,35 @@ from bs4 import BeautifulSoup, Comment
 # ToDo: add doc strings
 
 
+def unfold_flowed(text):
+    lines = text.splitlines()
+    nlines = len(lines)
+    i = 0
+    while i < nlines - 1:
+        if not lines[i].endswith(' ') or lines[i] == '-- ':
+            i += 1
+            continue
+
+        quote = re.match(r'\s*(>\s*)+', lines[i])
+        if quote:
+            quote = quote.group(0)
+            if lines[i + 1].startswith(quote):
+                nquote = re.match(r'\s*(>\s*)+', lines[i + 1]).group(0)
+                if nquote != quote:
+                    i += 1
+                    continue
+                lines[i] = lines[i][:len(lines[i]) - 1] + lines[i + 1][len(quote):]
+                del(lines[i + 1])
+                nlines -= 1
+                continue
+        elif not re.match(r'\s*(>\s*)+', lines[i + 1]):
+            lines[i] = lines[i][:len(lines[i]) - 1] + lines[i + 1]
+            del(lines[i + 1])
+            nlines -= 1
+            continue
+        i += 1
+    return '\n'.join(lines)
+
 class EmailParser(object):
     @staticmethod
     def parse(mime_mail_fp):
@@ -35,6 +64,7 @@ class EmailParser(object):
             'To': None,
             'Subject': None,
             'Date': None,
+            'Message-ID': None,
             'body-plain': None,
             'body-html': None
         }
@@ -42,6 +72,7 @@ class EmailParser(object):
         result['To'] = EmailParser.parse_header(parsed_mail, 'To')
         result['Subject'] = EmailParser.parse_header(parsed_mail, 'Subject')
         result['Date'] = EmailParser.parse_header(parsed_mail, 'Date')
+        result['Message-ID'] = EmailParser.parse_header(parsed_mail, 'Message-ID')
 
         messages = []
         extracted = EmailParser.extract_message(parsed_mail)
@@ -59,7 +90,7 @@ class EmailParser(object):
             except:
                 parameter = {}
             if  parameter.get('format') == 'flowed' and parameter.get('delsp') == 'yes':
-                body = body.replace(b' \n', '')
+                body = unfold_flowed(body)
             body = body.rstrip() + '\n'
 
             if content_type is None or content_type.startswith('text/plain'):
@@ -209,7 +240,7 @@ class Slack(object):
         if cfg.has_section('PreText'):
             self.pretext = [(re.compile(x[0]), x[1]) for x in cfg.items('PreText')]
 
-    def notice(self, mail):
+    def notify(self, mail):
 
         def html_escape(text):
             return text \
@@ -242,7 +273,7 @@ class Slack(object):
             return len(re.findall(r'\b(\d{3}-\d{3}-\d{4}|\d{4}-\d{3}-\d{4})\b', text))*len('<callto:>')
 
         def increment_of_mailaddr(text):
-            addrs = [a for n, a in getaddresses(re.sub(r'<mailto:[^>]+>', '', text).splitlines()) if a.find('@') >1]
+            addrs = [a for n, a in getaddresses([x for x in re.sub(r'<mailto:[^>]+>', '', text).replace(' ', '\n').splitlines() if x.find('@') > 1])]
             return len(''.join(addrs)) + len(addrs)*len('<mailto:|>')
 
         header_to = mail['To']
@@ -251,6 +282,7 @@ class Slack(object):
         address_from = parseaddr(header_from)[1]
         subject = mail['Subject']
         date = mail['Date']
+        message_id = mail['Message-ID']
         mime_part = [x[1] for x in self.mime_part if x[0].match(address_from)]
         if len(mime_part) and mime_part[0] == 'html' and mail['body-html']:
             body = get_html_text(mail['body-html'])
@@ -282,7 +314,7 @@ class Slack(object):
                 text += '```{:s}```\n'.format(escaped)
             else:
                 text += '{:s}'.format(escaped)
-            self.__post(url[0], self.__payload(text, channel=channel[0], footer='Posted by email2slack'))
+            self.__post(url[0], self.__payload(text, channel=channel[0], footer='Posted by email2slack. Original mail is {:s}.'.format(html_escape(message_id))))
             return
 
         heading = text
@@ -314,7 +346,7 @@ class Slack(object):
                 text = '{:s}```{:s}```'.format(heading, escaped)
                 self.__post(url[0], self.__payload(text, channel=channel[0]))
                 break
-        self.__post(url[0], self.__payload('', channel=channel[0], footer='Posted by email2slack'))
+        self.__post(url[0], self.__payload(text, channel=channel[0], footer='Posted by email2slack. Original mail is {:s}.'.format(html_escape(message_id))))
 
     @staticmethod
     def __payload(text, username=None, channel=None, footer=None):
@@ -337,7 +369,11 @@ class Slack(object):
     def __post(url, body):
         if Slack.__debug:
             print(body['channel'])
-            print(body['text'])
+            if body['text']:
+                print(body['text'])
+            if body.has_key('attachments'):
+                for k, v in body['attachments'][0].items():
+                    print(v)
         else:
             requests.post(url, json=body)
 
@@ -363,7 +399,7 @@ def main():
     except AttributeError:
         fp = sys.stdin
     mail = EmailParser.parse(fp)
-    Slack(args).notice(mail)
+    Slack(args).notify(mail)
 
 
 if __name__ == '__main__':
