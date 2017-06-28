@@ -2,10 +2,10 @@
 # Enumerate slack endpoints.
 #
 # Format:
-# TEAM_ALIAS = URL
+# TEAM_ALIAS=URL
 #
 # Example:
-# myteam = https://hooks.slack.com/services/FOO/BAR/FOOBAR
+# myteam=https://hooks.slack.com/services/FOO/BAR/FOOBAR
 #
 
 
@@ -13,20 +13,28 @@
 # Team convert table.
 #
 # Format:
-# TO_ADDRESS_REGEX = TEAM_ALIAS
+# TO_ADDRESS_REGEX=TEAM_ALIAS
+#
+# Matching is executed in order of declaration.
+# 'default' means '.*', you can override with -t / --team option
 #
 # Example:
-# .* = myteam
-# .*@gmail.com = home
+# .*@gmail.com=home
+# default=myteam
 
 
 [Channel]
 # Channel convert table.
 #
 # Format:
-# TO_ADDRESS_REGEX = CHANNEL
+# TO_ADDRESS_REGEX=CHANNEL
+#
+# Matching is executed in order of declaration.
+# 'default' means '.*', you can override with -c / --channel option
+# You should not insert space after '=', or '#' is treated as comment
+
 #
 # Example:
-# .* = random
-# .*@gmail.com = general
+# .*@gmail.com=#general
+# default=#random
 
