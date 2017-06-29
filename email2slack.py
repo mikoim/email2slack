@@ -302,7 +302,7 @@ class Slack(object):
 
         text = '*Date*: {:s}\n*From*: {:s}\n*To*: {:s}\n*Subject*: {:s}\n'.format(date, header_from, header_to, subject)
         msg_limit = 4000 \
-                    - len(text) \
+                    - len(html_escape(text)) \
                     - increment_of_mailaddr(text) \
                     - len('``````\n')
         pretext = self.flags.get('pretext', False)
@@ -319,33 +319,36 @@ class Slack(object):
 
         heading = text
         continued = 'continued: {:s}\n'.format(subject)
-        while len(body):
-            msg_limit = 4000 \
-                    - len(heading) \
+
+        body = body.splitlines()
+        escaped = escaped.splitlines()
+        increment = [increment_of_url(x) + increment_of_mailaddr(x) + increment_of_callto(x) for x in body]
+
+        msg_limit = 4000 \
+                    - len(html_escape(heading)) \
                     - increment_of_mailaddr(heading) \
                     - len('``````\n')
-            i = body.rfind('\n', 0, msg_limit) + 1
-            chunk = body[0:i]
-            increment = increment_of_url(chunk) + increment_of_mailaddr(chunk) + increment_of_callto(chunk)
-            escaped = html_escape(chunk)
-            increment += len(escaped) - len(chunk)
-            while len(chunk) + increment >= msg_limit:
-                chunk = chunk[:(msg_limit - increment)]
-                i = chunk.rfind('\n', 0, len(chunk) - 1) + 1
-                chunk = chunk[0:i]
-                escaped = html_escape(chunk)
-                increment = len(escaped) - len(chunk) + increment_of_url(chunk) + increment_of_mailaddr(chunk) + increment_of_callto(chunk)
-            heading = html_escape(heading)
-            if chunk:
-                text = '{:s}```{:s}```'.format(heading, escaped)
-                self.__post(url[0], self.__payload(text, channel=channel[0]))
-                body = body[len(chunk):]
+
+        while body:
+            i = 0
+            l = 0
+            lines = len(body)
+            while i < lines and \
+                  l + len(escaped[i]) + increment[i] + 1 < msg_limit:
+                l += len(escaped[i]) + increment[i] + 1
+                i += 1
+            chunk = '\n'.join(escaped[0:i]) + '\n'
+            text = '{:s}```{:s}```'.format(heading, chunk)
+            self.__post(url[0], self.__payload(text, channel=channel[0]))
+            body = body[i:]
+            escaped = escaped[i:]
+            increment = increment[i:]
+            if not heading.startswith('continued:'):
                 heading = continued
-            else:
-                escaped = html_escape(body)
-                text = '{:s}```{:s}```'.format(heading, escaped)
-                self.__post(url[0], self.__payload(text, channel=channel[0]))
-                break
+                msg_limit = 4000 \
+                    - len(html_escape(heading)) \
+                    - increment_of_mailaddr(heading) \
+                    - len('``````\n')
         self.__post(url[0], self.__payload(text, channel=channel[0], footer='Posted by email2slack. Original mail is {:s}.'.format(html_escape(message_id))))
 
     @staticmethod
