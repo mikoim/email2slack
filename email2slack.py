@@ -349,7 +349,7 @@ class Slack(object):
                     - len(html_escape(heading)) \
                     - increment_of_mailaddr(heading) \
                     - len('``````\n')
-        self.__post(url[0], self.__payload(text, channel=channel[0], footer='Posted by email2slack. Original mail is {:s}.'.format(html_escape(message_id))))
+        self.__post(url[0], self.__payload('', channel=channel[0], footer='Posted by email2slack. Original mail is {:s}.'.format(html_escape(message_id))))
 
     @staticmethod
     def __payload(text, username=None, channel=None, footer=None):
