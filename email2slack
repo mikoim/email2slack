@@ -38,3 +38,23 @@
 # .*@gmail.com=#general
 # default=#random
 
+
+[Flags]
+# pretext:
+#     treat mail body as pre-formatted, fixed-width text, in short ```body```
+#
+#pretext=false
+
+[MIME Part]
+# Prefer html part in multipart/alternative if mail come from this address.
+#
+# Format:
+# FROM_ADDRESS_REGEX=html
+#
+# Matching is executed in order of declaration.
+#
+
+#
+# Example:
+# foo@gmail.com=html
+#
