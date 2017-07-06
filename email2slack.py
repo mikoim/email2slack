@@ -18,6 +18,11 @@ from email.utils import parseaddr, getaddresses
 import chardet
 import requests
 
+try:
+    from nkf import nkf
+except:
+    nkf = None
+
 from bs4 import BeautifulSoup, Comment
 
 # ToDo: add doc strings
@@ -126,12 +131,24 @@ class EmailParser(object):
         if charset is None:
             charset = 'utf-8'
         elif charset == 'ISO-2022-JP':
-            charset = 'ISO-2022-JP-2004'
-            return message['Content-Type'], body.replace(b'\033$B', b'\033$(Q').replace(b'\033(J', b'\033(B').decode(encoding=charset, errors='replace')
+            if callable(nkf):
+                body = nkf('-Jwx', body)
+                charset = 'utf-8'
+            else:
+                charset = 'ISO-2022-JP-2004'
+                body = body.replace(b'\033$B', b'\033$(Q').replace(b'\033(J', b'\033(B')
         elif charset == 'SJIS':
-            charset = 'CP932'
+            if callable(nkf):
+                body = nkf('-Swx', body)
+                charset = 'utf-8'
+            else:
+                charset = 'CP932'
         elif charset == 'EUC-JP':
-            charset = 'EUCJIS2004'
+            if callable(nkf):
+                body = nkf('-Ew', body)
+                charset = 'utf-8'
+            else:
+                charset = 'EUCJIS2004'
 
         return message['Content-Type'], body.decode(encoding=charset, errors='replace')
 
@@ -157,12 +174,24 @@ class EmailParser(object):
                 for decoded_chunk, charset in decode_header(chunk):
                     if charset:
                         if charset == 'ISO-2022-JP':
-                            charset = 'ISO-2022-JP-2004'
-                            decoded_chunk = decoded_chunk.replace(b'\033$B', b'\033$(Q').replace(b'\033(J', b'\033(B')
+                            if callable(nkf):
+                                decoded_chunk = nkf('-Jw', decoded_chunk)
+                                charset = 'utf-8'
+                            else:
+                                charset = 'ISO-2022-JP-2004'
+                                decoded_chunk = decoded_chunk.replace(b'\033$B', b'\033$(Q').replace(b'\033(J', b'\033(B')
                         elif charset == 'SJIS':
-                            charset = 'CP932'
+                            if callable(nkf):
+                                decoded_chunk = nkf('-Sw', decoded_chunk)
+                                charset = 'utf-8'
+                            else:
+                                charset = 'CP932'
                         elif charset == 'EUC-JP':
-                            charset = 'EUCJIS2004'
+                            if callable(nkf):
+                                decoded_chunk = nkf('-Ew', decoded_chunk)
+                                charset = 'utf-8'
+                            else:
+                                charset = 'EUCJIS2004'
                         try:
                             decoded_chunk = decoded_chunk.decode(charset, errors='replace')
                         except TypeError:
