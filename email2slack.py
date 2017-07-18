@@ -88,7 +88,7 @@ class EmailParser(object):
                 messages.append(extracted)
 
         for m in messages:
-            content_type = m[0]
+            content_type = m[0].lower()
             body = m[1].replace('\r\n', '\n')
             try:
                 parameter = dict([x.split('=', 1) for x in content_type.split('; ')[1:]])
