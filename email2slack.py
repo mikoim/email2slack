@@ -6,15 +6,19 @@ import argparse
 import os
 import re
 import sys
-from configparser import ConfigParser
 from email.header import decode_header
+from email.parser import Parser
+from email.utils import parseaddr, getaddresses
+
+try:
+    import configparser
+except ImportError:
+    import ConfigParser as configparser
 
 try:
     from email.parser import BytesParser
 except:
     BytesParser = None
-from email.parser import Parser
-from email.utils import parseaddr, getaddresses
 
 import chardet
 import requests
