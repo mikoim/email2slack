@@ -1,5 +1,6 @@
 [run]
+include =
+          email2slack/*
 branch = True
 omit =
        tests/*
-
