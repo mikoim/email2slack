@@ -2,12 +2,13 @@
 
 from __future__ import print_function
 
+import argparse
+import os
 import re
 import sys
-import os
-import argparse
 from configparser import ConfigParser
 from email.header import decode_header
+
 try:
     from email.parser import BytesParser
 except:
@@ -23,7 +24,8 @@ try:
 except:
     nkf = None
 
-from bs4 import BeautifulSoup, Comment
+from bs4 import BeautifulSoup
+
 
 # ToDo: add doc strings
 
@@ -46,16 +48,17 @@ def unfold_flowed(text):
                     i += 1
                     continue
                 lines[i] = lines[i][:len(lines[i]) - 1] + lines[i + 1][len(quote):]
-                del(lines[i + 1])
+                del (lines[i + 1])
                 nlines -= 1
                 continue
         elif not re.match(r'\s*(>\s*)+', lines[i + 1]):
             lines[i] = lines[i][:len(lines[i]) - 1] + lines[i + 1]
-            del(lines[i + 1])
+            del (lines[i + 1])
             nlines -= 1
             continue
         i += 1
     return '\n'.join(lines)
+
 
 class EmailParser(object):
     @staticmethod
@@ -65,19 +68,14 @@ class EmailParser(object):
         else:
             parsed_mail = Parser().parse(mime_mail_fp)
         result = {
-            'From': None,
-            'To': None,
-            'Subject': None,
-            'Date': None,
-            'Message-ID': None,
+            'From': EmailParser.parse_header(parsed_mail, 'From'),
+            'To': EmailParser.parse_header(parsed_mail, 'To'),
+            'Subject': EmailParser.parse_header(parsed_mail, 'Subject'),
+            'Date': EmailParser.parse_header(parsed_mail, 'Date'),
+            'Message-ID': EmailParser.parse_header(parsed_mail, 'Message-ID'),
             'body-plain': None,
             'body-html': None
         }
-        result['From'] = EmailParser.parse_header(parsed_mail, 'From')
-        result['To'] = EmailParser.parse_header(parsed_mail, 'To')
-        result['Subject'] = EmailParser.parse_header(parsed_mail, 'Subject')
-        result['Date'] = EmailParser.parse_header(parsed_mail, 'Date')
-        result['Message-ID'] = EmailParser.parse_header(parsed_mail, 'Message-ID')
 
         messages = []
         extracted = EmailParser.extract_message(parsed_mail)
@@ -96,7 +94,7 @@ class EmailParser(object):
                 parameter = dict([x.split('=', 1) for x in content_type.split('; ')[1:]])
             except:
                 parameter = {}
-            if  parameter.get('format') == 'flowed' and parameter.get('delsp') == 'yes':
+            if parameter.get('format') == 'flowed' and parameter.get('delsp') == 'yes':
                 body = unfold_flowed(body)
             body = body.rstrip() + '\n'
 
@@ -165,10 +163,10 @@ class EmailParser(object):
         i = 0
         while i < len(chunks):
             if chunks[i].startswith('=?') and chunks[i].endswith('?=') and \
-               i < len(chunks) - 2 and \
-               chunks[i + 1] == ' ' and \
-               chunks[i + 2].startswith('=?') and chunks[i + 2].endswith('?='):
-                del(chunks[i + 1])
+                            i < len(chunks) - 2 and \
+                            chunks[i + 1] == ' ' and \
+                    chunks[i + 2].startswith('=?') and chunks[i + 2].endswith('?='):
+                del (chunks[i + 1])
             i += 1
 
         for chunk in chunks:
@@ -181,7 +179,9 @@ class EmailParser(object):
                                 charset = 'utf-8'
                             else:
                                 charset = 'ISO-2022-JP-2004'
-                                decoded_chunk = decoded_chunk.replace(b'\033$B', b'\033$(Q').replace(b'\033(J', b'\033(B')
+                                decoded_chunk = decoded_chunk \
+                                    .replace(b'\033$B', b'\033$(Q') \
+                                    .replace(b'\033(J', b'\033(B')
                         elif charset == 'SJIS':
                             if callable(nkf):
                                 decoded_chunk = nkf('-Sw', decoded_chunk)
@@ -205,6 +205,7 @@ class EmailParser(object):
                 decoded.append(chunk)
         return ''.join(decoded)
 
+
 class Slack(object):
     __debug = False
 
@@ -212,7 +213,7 @@ class Slack(object):
         cfg = ConfigParser()
         candidate = [
             'email2slack',
-             os.path.expanduser('~/.email2slack'),
+            os.path.expanduser('~/.email2slack'),
             '/etc/email2slack',
             '/usr/local/etc/email2slack'
         ]
@@ -275,9 +276,9 @@ class Slack(object):
 
         def html_escape(text):
             return text \
-                 .replace('&', '&amp;') \
-                 .replace('<', '&lt;') \
-                 .replace('>', '&gt;')
+                .replace('&', '&amp;') \
+                .replace('<', '&lt;') \
+                .replace('>', '&gt;')
 
         def get_html_text(html):
             soup = BeautifulSoup(html, "lxml")
@@ -298,14 +299,18 @@ class Slack(object):
             DOMAINURL_PATTERN = r'(\b(?:[\w\d][-\w\d]+?\.)+\w{2,4}\b)'
             urls = re.findall(URL_PATTERN, text)
             domains = re.findall(DOMAINURL_PATTERN, text)
-            return len(urls)*len('<>') + len(''.join(domains)) + len(urls)*len('<http://|>')
+            return len(urls) * len('<>') + len(''.join(domains)) + len(urls) * len('<http://|>')
 
         def increment_of_callto(text):
-            return len(re.findall(r'\b(\d{3}-\d{3}-\d{4}|\d{4}-\d{3}-\d{4})\b', text))*len('<callto:>')
+            return len(re.findall(r'\b(\d{3}-\d{3}-\d{4}|\d{4}-\d{3}-\d{4})\b', text)) * len('<callto:>')
 
         def increment_of_mailaddr(text):
-            addrs = [a for n, a in getaddresses([x for x in re.sub(r'<mailto:[^>]+>', '', text).replace(' ', '\n').splitlines() if x.find('@') > 1])]
-            return len(''.join(addrs)) + len(addrs)*len('<mailto:|>')
+            addrs = [
+                a for n, a in getaddresses(
+                    [x for x in re.sub(r'<mailto:[^>]+>', '', text).replace(' ', '\n').splitlines() if x.find('@') > 1]
+                )
+            ]
+            return len(''.join(addrs)) + len(addrs) * len('<mailto:|>')
 
         header_to = mail['To']
         address_to = parseaddr(header_to)[1]
@@ -345,7 +350,11 @@ class Slack(object):
                 text += '```{:s}```\n'.format(escaped)
             else:
                 text += '{:s}'.format(escaped)
-            self.__post(url[0], self.__payload(text, channel=channel[0], footer='Posted by email2slack. Original mail is {:s}.'.format(html_escape(message_id))))
+            self.__post(url[0], self.__payload(
+                text,
+                channel=channel[0],
+                footer='Posted by email2slack. Original mail is {:s}.'.format(html_escape(message_id))
+            ))
             return
 
         heading = text
@@ -364,8 +373,7 @@ class Slack(object):
             i = 0
             l = 0
             lines = len(body)
-            while i < lines and \
-                  l + len(escaped[i]) + increment[i] + 1 < msg_limit:
+            while i < lines and l + len(escaped[i]) + increment[i] + 1 < msg_limit:
                 l += len(escaped[i]) + increment[i] + 1
                 i += 1
             chunk = '\n'.join(escaped[0:i]) + '\n'
@@ -377,10 +385,14 @@ class Slack(object):
             if not heading.startswith('continued:'):
                 heading = continued
                 msg_limit = 4000 \
-                    - len(html_escape(heading)) \
-                    - increment_of_mailaddr(heading) \
-                    - len('``````\n')
-        self.__post(url[0], self.__payload('', channel=channel[0], footer='Posted by email2slack. Original mail is {:s}.'.format(html_escape(message_id))))
+                            - len(html_escape(heading)) \
+                            - increment_of_mailaddr(heading) \
+                            - len('``````\n')
+        self.__post(url[0], self.__payload(
+            '',
+            channel=channel[0],
+            footer='Posted by email2slack. Original mail is {:s}.'.format(html_escape(message_id))
+        ))
 
     @staticmethod
     def __payload(text, username=None, channel=None, footer=None):
@@ -414,17 +426,13 @@ class Slack(object):
 
 def get_arg_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--channel",
-                    help=("default slack channel."))
-    parser.add_argument("-d", "--debug", action='store_true',
-                    help=("dry run, does not post to slack."))
-    parser.add_argument("-f", "--config",
-                    help=("email2slack config file."))
-    parser.add_argument("-s", "--slack",
-                    help=("default slack incoming hook."))
-    parser.add_argument("-t", "--team",
-                    help=("default slack team."))
+    parser.add_argument("-c", "--channel", help=("default slack channel."))
+    parser.add_argument("-d", "--debug", action='store_true', help=("dry run, does not post to slack."))
+    parser.add_argument("-f", "--config", help=("email2slack config file."))
+    parser.add_argument("-s", "--slack", help=("default slack incoming hook."))
+    parser.add_argument("-t", "--team", help=("default slack team."))
     return parser
+
 
 def main():
     args = get_arg_parser().parse_args()
