@@ -69,7 +69,7 @@ class Slack(object):
 
         self.flags = {}
         if cfg.has_section('Flags'):
-            self.flags['pretext'] = cfg.getboolean('Flags', 'pretext')
+            self.flags['pretext'] = cfg.getboolean('Flags', 'pretext', fallback=False)
         self.mime_part = {}
         if cfg.has_section('MIME Part'):
             self.mime_part = [(re.compile(x[0]), x[1]) for x in cfg.items('MIME Part')]
