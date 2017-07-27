@@ -62,6 +62,17 @@ class TestEmailParser(unittest.TestCase):
             'body-html': '<div dir="ltr"><span style="background-color:rgb(255,0,0)">red</span></div>\n'
         })
 
+    def test_mailman(self):
+        self.assertEqual(self.do('mailman.txt'), {
+            'Message-ID': '<x>',
+            'Date': 'Wed, 19 Jul 2017 09:17:38 +0000',
+            'From': 'x <y@z>',
+            'To': 'test@example.com',
+            'Subject': '[test 00001] test',
+            'body-plain': '😀\n',
+            'body-html': None
+        })
+
 
 if __name__ == '__main__':
     unittest.main()
