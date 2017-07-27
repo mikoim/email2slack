@@ -11,9 +11,9 @@ from email.parser import Parser
 from email.utils import parseaddr, getaddresses
 
 try:
-    import configparser
+    from configparser import ConfigParser # Python 3
 except ImportError:
-    import ConfigParser as configparser
+    from ConfigParser import ConfigParser # Python 2
 
 try:
     from email.parser import BytesParser
