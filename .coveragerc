@@ -1,2 +1,6 @@
 [run]
-include = email2slack.py
+include =
+          email2slack/*
+branch = True
+omit =
+       tests/*

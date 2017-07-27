@@ -1,0 +1,21 @@
+X-Original-To: to@example.com
+Delivered-To: to@example.com
+MIME-Version: 1.0
+From: Test Test <from@example.com>
+Date: Thu, 27 Jul 2017 22:39:48 +0900
+Message-ID: <x>
+Subject: HTML
+To: to@example.com
+Content-Type: multipart/alternative; boundary="001a1141a86226d4d605554cb50d"
+
+--001a1141a86226d4d605554cb50d
+Content-Type: text/plain; charset="UTF-8"
+
+red
+
+--001a1141a86226d4d605554cb50d
+Content-Type: text/html; charset="UTF-8"
+
+<div dir="ltr"><span style="background-color:rgb(255,0,0)">red</span></div>
+
+--001a1141a86226d4d605554cb50d--

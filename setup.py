@@ -33,10 +33,13 @@ setup(
         'License :: OSI Approved :: MIT License',
 
         'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
 
     keywords='email slack forwarding',
@@ -44,8 +47,13 @@ setup(
     py_modules=['email2slack'],
 
     install_requires=[
-        'chardet>=2.3.0',
-        'requests>=2.10.0'
+        'beautifulsoup4==4.6.0',
+        'certifi==2017.4.17',
+        'chardet==3.0.4',
+        'idna==2.5',
+        'lxml==3.8.0',
+        'requests==2.18.2',
+        'urllib3==1.22',
     ],
 
     entry_points={

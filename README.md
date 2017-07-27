@@ -6,18 +6,16 @@
 
 MIME E-mail forwarding script for Slack written in Python.
 
-I tested on Python 3.5 and Postfix only.
-Please report test report and sample configuration on other MTAs.
-
 ## Demo
 
 ![Slack](slack-demo.png)
 
 ## Requirements
 
- - Python >= 3.3
- - chardet  : https://github.com/chardet/chardet
- - requests : https://github.com/kennethreitz/requests
+- Python
+  - Python 2.x >= 2.7
+  - Python 3.x >= 3.3
+- nkf (Optional): https://pypi.python.org/pypi/nkf/
 
 ## Getting Started
 
@@ -27,11 +25,11 @@ Please report test report and sample configuration on other MTAs.
 
 ```bash
 # Install email2slack
-pip3 install email2slack
+pip install email2slack --upgrade
 
 # Fetch configuration file from GitHub
 cd /usr/local/etc/
-curl -O https://raw.githubusercontent.com/mikoim/email2slack/master/email2slack
+curl -O https://raw.githubusercontent.com/mikoim/email2slack/master/contrib/email2slack
 
 # Before using, You must edit config file
 vim /usr/local/etc/email2slack
@@ -46,15 +44,18 @@ So you should use the script in Setup MTA section.
 git clone https://github.com/mikoim/email2slack.git
 cd email2slack
 
-# Install dependencies
-pip3 install -r requirements.txt
-
 # Install email2slack
-cp email2slack.py /usr/local/bin/email2slack.py && chmod +x /usr/local/bin/email2slack.py
-cp email2slack /usr/local/etc/
+pip install .
+cp contrib/email2slack /usr/local/etc/
 
 # Before using, You must edit config file
 vim /usr/local/etc/email2slack
+```
+
+#### Optional: Install nkf
+
+```bash
+pip3 install nkf
 ```
 
 ### Setup MTA
@@ -88,3 +89,9 @@ another: "|/usr/local/bin/email2slack.py -c '#random'"
 
 newaliases
 ```
+
+## Contributors
+
+Thank you for your great work!
+
+- @komeda-shinji

@@ -1,0 +1,13 @@
+Return-Path: <test@example.com>
+X-Original-To: test@example.com
+Delivered-To: test@example.com
+MIME-Version: 1.0
+From: Test Test <test@example.com>
+Date: Thu, 27 Jul 2017 22:21:52 +0900
+Message-ID: <x>
+Subject: =?UTF-8?B?5pel5pys6Kqe?=
+To: test@example.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
+
+44GT44Gu44Oh44O844Or44Gv5pel5pys6Kqe44Gn5pu444GL44KM44Gm44GE44G+44GZDQo=

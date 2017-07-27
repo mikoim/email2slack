@@ -1,0 +1,16 @@
+Delivered-To: xxx@gmail.com
+Return-Path: <fail2ban@example.com>
+Delivered-To: root@example.com
+Subject: [Fail2Ban] sshd: started on xxx
+Date: Thu, 27 Jul 2017 19:28:46 +0900
+From: Fail2Ban <fail2ban@example.com>
+To: root@example.com
+Message-Id: <x>
+
+Hi,
+
+The jail sshd has been started successfully.
+
+Regards,
+
+Fail2Ban
