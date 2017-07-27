@@ -1,95 +1,66 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import os
 import unittest
 
 from email2slack import EmailParser
 
 
 class TestEmailParser(unittest.TestCase):
-    def test_text_email(self):
-        email = """Return-Path: <test_from@test>
-    X-Original-To: test_to@test
-    Delivered-To: test_to@test
-    From: test_from@test
-    Subject: subject_test
-    To: test_to@test
-    Date: Sat, 12 Nov 2016 23:37:27 +0900 (JST)
-    
-    message_test"""
+    @classmethod
+    def setUpClass(cls):
+        cls.maxDiff = 10000
 
-        assert EmailParser.parse(email) == {
-            'From': 'test_from@test',
-            'To': 'test_to@test',
-            'Subject': 'subject_test',
-            'body-plain': 'message_test',
+    def do(self, filename):
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', filename)
+        with open(path, mode='rb') as fp:
+            return EmailParser.parse(fp)
+
+    def test_ascii(self):
+        self.assertEqual(self.do('ascii.txt'), {
+            'Message-ID': '<x>',
+            'Date': 'Thu, 27 Jul 2017 22:13:45 +0900',
+            'From': 'Test Test <test@example.com>',
+            'To': 'test@example.com',
+            'Subject': 'test subject',
+            'body-plain': 'test message\n',
             'body-html': None
-        }
+        })
 
-    def test_text_email_abnormal(self):
-        email = """Return-Path: <test_from@test>
-    X-Original-To: test_to@test
-    Delivered-To: test_to@test
-    
-    message_test"""
-
-        assert EmailParser.parse(email) == {
-            'From': '',
-            'To': '',
-            'Subject': '',
-            'body-plain': 'message_test',
+    def test_utf8(self):
+        self.assertEqual(self.do('utf8.txt'), {
+            'Message-ID': '<x>',
+            'Date': 'Thu, 27 Jul 2017 22:21:52 +0900',
+            'From': 'Test Test <test@example.com>',
+            'To': 'test@example.com',
+            'Subject': '日本語',
+            'body-plain': 'このメールは日本語で書かれています\n',
             'body-html': None
-        }
+        })
 
-    def test_text_email_utf8(self):
-        email = """Return-Path: <test_from@test>
-    X-Original-To: test_to@test
-    Delivered-To: test_to@test
-    From: test_from@test
-    Subject: =?UTF-8?B?8J+RgfCfkJ1N?=
-    To: test_to@test
-    Content-Type: text/plain; charset=UTF-8
-    Content-Transfer-Encoding: base64
-    
-    8J+QjQ0K"""
+    def test_fail2ban(self):
+        self.assertEqual(self.do('fail2ban.txt'), {
+            'Message-ID': '<x>',
+            'Date': 'Thu, 27 Jul 2017 19:28:46 +0900',
+            'From': 'Fail2Ban <fail2ban@example.com>',
+            'To': 'root@example.com',
+            'Subject': '[Fail2Ban] sshd: started on xxx',
+            'body-plain': 'Hi,\n\nThe jail sshd has been started successfully.\n\nRegards,\n\nFail2Ban\n',
+            'body-html': None,
+        })
 
-        assert EmailParser.parse(email) == {
-            'From': 'test_from@test',
-            'To': 'test_to@test',
-            'Subject': '👁🐝M',
-            'body-plain': '🐍\r\n',
-            'body-html': None
-        }
-
-    def test_html_email(self):
-        email = """Return-Path: <test_from@test>
-    X-Original-To: test_to@test
-    Delivered-To: test_to@test
-    From: test_from@test
-    Subject: subject_test
-    To: test_to@test
-    Date: Sat, 12 Nov 2016 23:37:27 +0900 (JST)
-    Content-Type: multipart/alternative; boundary=94eb2c14a07ea8d44d05411b334d
-    
-    --94eb2c14a07ea8d44d05411b334d
-    Content-Type: text/plain; charset=UTF-8
-    
-    message_test
-    
-    --94eb2c14a07ea8d44d05411b334d
-    Content-Type: text/html; charset=UTF-8
-    
-    <b>message_test</b>
-    
-    --94eb2c14a07ea8d44d05411b334d--"""
-
-        assert EmailParser.parse(email) == {
-            'From': 'test_from@test',
-            'To': 'test_to@test',
-            'Subject': 'subject_test',
-            'body-plain': 'message_test\n',
-            'body-html': '<b>message_test</b>\n'
-        }
+    def test_html(self):
+        self.assertEqual(self.do('html.txt'), {
+            'Message-ID': '<x>',
+            'Date': 'Thu, 27 Jul 2017 22:39:48 +0900',
+            'From': 'Test Test <from@example.com>',
+            'To': 'to@example.com',
+            'Subject': 'HTML',
+            'body-plain': 'red\n',
+            'body-html': '<div dir="ltr"><span style="background-color:rgb(255,0,0)">red</span></div>\n'
+        })
 
 
 if __name__ == '__main__':

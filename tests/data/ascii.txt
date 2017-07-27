@@ -1,0 +1,14 @@
+Return-Path: <test@example.com>
+X-Original-To: test@example.com
+Delivered-To: test@example.com
+To: test@example.com
+From: Test Test <test@example.com>
+Subject: test subject
+Message-ID: <x>
+Date: Thu, 27 Jul 2017 22:13:45 +0900
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+
+test message
