@@ -1,0 +1,16 @@
+Date: Wed, 19 Jul 2017 09:17:38 +0000
+Message-ID: <x>
+From: x <y@z>
+To: test@example.com
+User-Agent: Internet Messaging Program (IMP) H5 (6.1.4)
+MIME-Version: 1.0
+Content-Disposition: inline
+Subject: [test 00001] test
+Precedence: list
+List-Id: test-ml@example.com <test.example.com>
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"; DelSp="Yes"
+Errors-To: test-bounces@example.com
+Sender: test <test-bounces@example.com>
+
+8J+YgA==

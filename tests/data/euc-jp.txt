@@ -1,0 +1,14 @@
+Delivered-To: test@example.com
+To: test@example.com
+From: x <x>
+Subject: =?UTF-8?B?RVVDLUpQ44Gn5pel5pys6Kqe?=
+Message-ID: <x>
+Date: Fri, 28 Jul 2017 02:05:35 +0900
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:52.0) Gecko/20100101
+ Thunderbird/52.2.1
+MIME-Version: 1.0
+Content-Type: text/plain; charset=EUC-JP
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
+
+このメールはEUC-JPでエンコードされています．

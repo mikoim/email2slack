@@ -79,7 +79,7 @@ class EmailParser(object):
                 content_type = content_type.lower()
             body = m[1].replace('\r\n', '\n')
             try:
-                parameter = dict([x.split('=', 1) for x in content_type.split('; ')[1:]])
+                parameter = dict([x.split('=', 1) for x in content_type.lower().replace('"', '').split('; ')[1:]])
             except:
                 parameter = {}
             if parameter.get('format') == 'flowed' and parameter.get('delsp') == 'yes':
@@ -125,7 +125,7 @@ class EmailParser(object):
             else:
                 charset = 'ISO-2022-JP-2004'
                 body = body.replace(b'\033$B', b'\033$(Q').replace(b'\033(J', b'\033(B')
-        elif charset == 'SJIS':
+        elif charset == 'SHIFT_JIS':
             if callable(nkf):
                 body = nkf('-Swx', body)
                 charset = 'utf-8'
