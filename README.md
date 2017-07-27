@@ -6,9 +6,6 @@
 
 MIME E-mail forwarding script for Slack written in Python.
 
-I tested on Python 3.5 and Postfix only.
-Please report test report and sample configuration on other MTAs.
-
 ## Demo
 
 ![Slack](slack-demo.png)
@@ -92,3 +89,9 @@ another: "|/usr/local/bin/email2slack.py -c '#random'"
 
 newaliases
 ```
+
+## Contributors
+
+Thank you for your great work!
+
+- @komeda-shinji
