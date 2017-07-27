@@ -132,6 +132,8 @@ class Slack(object):
             body = mail['body-plain']
         elif mail['body-html']:
             body = get_html_text(mail['body-html'])
+        else:
+            body = ''
 
         url = [r[1] for r in self.__team if r[0].match(address_to)]
         if url is None:
