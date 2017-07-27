@@ -40,6 +40,39 @@ class TestEmailParser(unittest.TestCase):
             'body-html': None
         })
 
+    def test_euc_jp(self):
+        self.assertEqual(self.do('euc-jp.txt'), {
+            'Message-ID': '<x>',
+            'Date': 'Fri, 28 Jul 2017 02:05:35 +0900',
+            'From': 'x <x>',
+            'To': 'test@example.com',
+            'Subject': 'EUC-JPで日本語',
+            'body-plain': 'このメールはEUC-JPでエンコードされています．\n',
+            'body-html': None
+        })
+
+    def test_iso_2022_jp(self):
+        self.assertEqual(self.do('iso-2022-jp.txt'), {
+            'Message-ID': '<x>',
+            'Date': 'Fri, 28 Jul 2017 02:05:35 +0900',
+            'From': 'x <x>',
+            'To': 'test@example.com',
+            'Subject': 'ISO-2022-JPで日本語',
+            'body-plain': 'このメールはISO-2022-JPでエンコードされています．\n',
+            'body-html': None
+        })
+
+    def test_shift_jis(self):
+        self.assertEqual(self.do('shift_jis.txt'), {
+            'Message-ID': '<x>',
+            'Date': 'Fri, 28 Jul 2017 02:05:35 +0900',
+            'From': 'x <x>',
+            'To': 'test@example.com',
+            'Subject': 'Shift_JISで日本語',
+            'body-plain': 'このメールはShift_JISでエンコードされています．\n',
+            'body-html': None
+        })
+
     def test_fail2ban(self):
         self.assertEqual(self.do('fail2ban.txt'), {
             'Message-ID': '<x>',
