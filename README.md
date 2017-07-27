@@ -18,6 +18,7 @@ Please report test report and sample configuration on other MTAs.
  - Python >= 3.3
  - chardet  : https://github.com/chardet/chardet
  - requests : https://github.com/kennethreitz/requests
+ - nkf (Optional): https://pypi.python.org/pypi/nkf/
 
 ## Getting Started
 
@@ -55,6 +56,12 @@ cp email2slack /usr/local/etc/
 
 # Before using, You must edit config file
 vim /usr/local/etc/email2slack
+```
+
+#### Optional: Install nkf
+
+```bash
+pip3 install nkf
 ```
 
 ### Setup MTA
