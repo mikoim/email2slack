@@ -125,7 +125,7 @@ class EmailParser(object):
             else:
                 charset = 'ISO-2022-JP-2004'
                 body = body.replace(b'\033$B', b'\033$(Q').replace(b'\033(J', b'\033(B')
-        elif charset == 'SJIS':
+        elif charset == 'SHIFT_JIS':
             if callable(nkf):
                 body = nkf('-Swx', body)
                 charset = 'utf-8'
