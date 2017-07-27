@@ -50,9 +50,9 @@ class Slack(object):
                         team = default_team
                         default_team = None
                 self.__team.append((re.compile(pattern), slack[team]))
-        if default_team and slack.has_key(default_team):
+        if default_team and default_team in slack:
             self.__team.append((re.compile(r'.*'), slack[default_team]))
-        if len(self.__team) == 0 and slack.has_key('default'):
+        if len(self.__team) == 0 and 'default' in slack:
             self.__team.append((re.compile(r'.*'), slack['default']))
 
         self.__channel = []
@@ -69,7 +69,7 @@ class Slack(object):
 
         self.flags = {}
         if cfg.has_section('Flags'):
-            self.flags['pretext'] = cfg.getboolean('Flags', 'pretext')
+            self.flags['pretext'] = cfg.getboolean('Flags', 'pretext', fallback=False)
         self.mime_part = {}
         if cfg.has_section('MIME Part'):
             self.mime_part = [(re.compile(x[0]), x[1]) for x in cfg.items('MIME Part')]
@@ -132,6 +132,8 @@ class Slack(object):
             body = mail['body-plain']
         elif mail['body-html']:
             body = get_html_text(mail['body-html'])
+        else:
+            body = ''
 
         url = [r[1] for r in self.__team if r[0].match(address_to)]
         if url is None:
@@ -222,7 +224,7 @@ class Slack(object):
             print(body['channel'])
             if body['text']:
                 print(body['text'])
-            if body.has_key('attachments'):
+            if 'attachments' in body:
                 for k, v in body['attachments'][0].items():
                     print(v)
         else:
