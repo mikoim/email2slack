@@ -211,7 +211,8 @@ class Slack(object):
         if channel:
             result['channel'] = channel
         if footer:
-            if attachments is None: attachments = [{}]
+            if attachments is None:
+                attachments = [{}]
             attachments[0]["footer"] = footer
         if attachments:
             result['attachments'] = attachments
