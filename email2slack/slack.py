@@ -68,8 +68,8 @@ class Slack(object):
             self.__channel.append((re.compile(r'.*'), default_channel))
 
         self.flags = {}
-        if cfg.has_section('Flags'):
-            self.flags['pretext'] = cfg.getboolean('Flags', 'pretext', fallback=False)
+        if cfg.has_option('Flags', 'pretext'):
+            self.flags['pretext'] = cfg.getboolean('Flags', 'pretext')
         self.mime_part = {}
         if cfg.has_section('MIME Part'):
             self.mime_part = [(re.compile(x[0]), x[1]) for x in cfg.items('MIME Part')]
