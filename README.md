@@ -19,6 +19,14 @@ MIME E-mail forwarding script for Slack written in Python.
 
 ## Getting Started
 
+### Prerequisites
+
+Installation of email2slack requires `gcc` and the development packages of both
+`libxml2` and `libxslt`. On RedHat based systems you can install these using
+`sudo yum install gcc libxml2-devel libxslt-devel`. On Ubuntu systems you can
+install using `sudo apt-get install build-essential libxml2-dev libxslt-dev`.
+If you are using some other system there are probably similar packages available.
+
 ### Install email2slack
 
 #### From PyPI
