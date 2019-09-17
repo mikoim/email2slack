@@ -76,13 +76,13 @@ vim /etc/postfix/aliases
 ...
 
 # notify only, not forward
-user: |/usr/local/bin/email2slack.py
+user: |/usr/local/bin/email2slack
 
 # notify and forward e-mail to another user
-user: anotheruser, |/usr/local/bin/email2slack.py
+user: anotheruser, |/usr/local/bin/email2slack
 
 # notify and leave e-mail on same user
-user: \user, |/usr/local/bin/email2slack.py
+user: \user, |/usr/local/bin/email2slack
 
 # you can override default slack url, team and channel with command line option,
 # which replace as default=value in each section.
@@ -90,8 +90,8 @@ user: \user, |/usr/local/bin/email2slack.py
 # -t team-name / --team team-name
 # -c channel-name / --channel channel-name
 # -f /path/to/email2slack.conf / --config /path/to/email2slack.conf
-user: "|/usr/local/bin/email2slack.py -c '@user'"
-another: "|/usr/local/bin/email2slack.py -c '#random'"
+user: "|/usr/local/bin/email2slack -c '@user'"
+another: "|/usr/local/bin/email2slack -c '#random'"
 
 ...
 
