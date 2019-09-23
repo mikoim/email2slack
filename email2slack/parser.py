@@ -7,14 +7,14 @@ from email.parser import Parser
 
 try:
     from email.parser import BytesParser
-except:
+except ImportError:
     BytesParser = None
 
 import chardet
 
 try:
     from nkf import nkf
-except:
+except ImportError:
     nkf = None
 
 
