@@ -19,6 +19,14 @@ MIME E-mail forwarding script for Slack written in Python.
 
 ## Getting Started
 
+### Prerequisites
+
+Installation of email2slack requires `gcc` and the development packages of both
+`libxml2` and `libxslt`. On RedHat based systems you can install these using
+`sudo yum install gcc libxml2-devel libxslt-devel`. On Ubuntu systems you can
+install using `sudo apt-get install build-essential libxml2-dev libxslt-dev`.
+If you are using some other system there are probably similar packages available.
+
 ### Install email2slack
 
 #### From PyPI
@@ -68,13 +76,13 @@ vim /etc/postfix/aliases
 ...
 
 # notify only, not forward
-user: |/usr/local/bin/email2slack.py
+user: |/usr/local/bin/email2slack
 
 # notify and forward e-mail to another user
-user: anotheruser, |/usr/local/bin/email2slack.py
+user: anotheruser, |/usr/local/bin/email2slack
 
 # notify and leave e-mail on same user
-user: \user, |/usr/local/bin/email2slack.py
+user: \user, |/usr/local/bin/email2slack
 
 # you can override default slack url, team and channel with command line option,
 # which replace as default=value in each section.
@@ -82,8 +90,8 @@ user: \user, |/usr/local/bin/email2slack.py
 # -t team-name / --team team-name
 # -c channel-name / --channel channel-name
 # -f /path/to/email2slack.conf / --config /path/to/email2slack.conf
-user: "|/usr/local/bin/email2slack.py -c '@user'"
-another: "|/usr/local/bin/email2slack.py -c '#random'"
+user: "|/usr/local/bin/email2slack -c '@user'"
+another: "|/usr/local/bin/email2slack -c '#random'"
 
 ...
 
