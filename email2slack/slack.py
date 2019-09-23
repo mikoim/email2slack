@@ -8,6 +8,12 @@ from email.utils import parseaddr, getaddresses
 import requests
 from bs4 import BeautifulSoup
 
+try:
+    import lxml
+    HTMLParser = 'lxml'
+except ImportError:
+    HTMLParser = 'html5lib'
+
 from .compat import *
 
 
@@ -86,7 +92,7 @@ class Slack(object):
                 .replace('>', '&gt;')
 
         def get_html_text(html):
-            soup = BeautifulSoup(html, "lxml")
+            soup = BeautifulSoup(html, HTMLParser)
             for e in soup(['style', 'script', '[document]', 'head', 'title']):
                 e.extract()
             for br in soup.find_all("br"):

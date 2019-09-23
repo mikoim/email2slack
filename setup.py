@@ -32,26 +32,19 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
     keywords='email slack forwarding',
-    requires=[
-        'beautifulsoup4',
-        'certifi',
-        'chardet',
-        'idna',
-        'lxml',
-        'requests',
-        'urllib3',
-    ],
     install_requires=[
-        'beautifulsoup4==4.6.0',
-        'certifi==2017.4.17',
-        'chardet==3.0.4',
-        'idna==2.5',
-        'lxml==3.8.0',
-        'requests==2.18.2',
-        'urllib3==1.22',
+        'beautifulsoup4==4.8.0',
+        'requests==2.22.0',
+        'html5lib==1.0.1'
     ],
+    extras_require={
+        'test': ['pytest'],
+        'lxml': ['lxml==4.4.1'],
+        'nkf': ['nkf==0.2.0']
+    },
     entry_points={
         'console_scripts': [
             'email2slack = email2slack:main',
