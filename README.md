@@ -20,7 +20,7 @@ MIME E-mail forwarding script for Slack(webhook) written in Python.
 
 - Python
   - Python 2 >= 2.7
-  - Python 3 >= 3.3
+  - Python 3 >= 3.4
 
 ## Getting Started
 

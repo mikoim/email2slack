@@ -1,15 +1,15 @@
 language: python
 python:
   - 2.7
-  - 3.3
   - 3.4
   - 3.5
   - 3.6
+  - 3.7
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install -y nkf
+  - sudo apt-get install -y libxml2-dev libxslt-dev
 install:
-  - pip install -r requirements_dev.txt
+  - pip install -e .[lxml,nkf,test]
   - pip install coveralls
 script: coverage run -m pytest
 after_success: coveralls
